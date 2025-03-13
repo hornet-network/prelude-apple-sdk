@@ -1,0 +1,28 @@
+{
+  "name": "PreludeAppleSDK",
+  "version": "0.1.0",
+  "summary": "Cocoapod fork of Prelude's Apple SDK",
+  "homepage": "hhttps://github.com/prelude-so/apple-sdk",
+  "platforms": {
+    "ios": "15.0"
+  },
+  "license": {
+    "type": "Copyright",
+    "text": "Prelude. All rights reserved."
+  },
+  "authors": "Prelude",
+  "source": {
+    "git": "git@github.com:prelude-so/apple-sdk.git"
+  },
+  "default_subspecs": "Prelude",
+  "subspecs": [
+    {
+      "name": "Prelude",
+      "source_files": "Sources/**"
+    },
+    {
+      "name": "PreludeCore",
+      "source": "https://prelude-public.s3.amazonaws.com/sdk/releases/apple/core/0.1.0/PreludeCore-0.1.0.xcframework.zip"
+    }
+  ]
+}
