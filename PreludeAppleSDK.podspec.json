@@ -14,6 +14,11 @@
   "source": {
     "git": "git@github.com:hornet-network/prelude-apple-sdk.git"
   },
+  "vendored_frameworks": "PreludeAppleSDK",
+  "source_files": "Sources/**",
+  "frameworks": [
+    "Foundation"
+  ],
   "subspecs": [
     {
       "name": "PreludeCore",
