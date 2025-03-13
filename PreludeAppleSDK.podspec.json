@@ -17,7 +17,7 @@
   "subspecs": [
     {
       "name": "Prelude",
-      "source_files": "Sources/**",
+      "source_files": "Sources/Prelude/**",
       "frameworks": [
         "Foundation"
       ]
