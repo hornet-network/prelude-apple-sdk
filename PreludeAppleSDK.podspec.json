@@ -1,6 +1,6 @@
 {
   "name": "PreludeAppleSDK",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "summary": "Cocoapod fork of Prelude's Apple SDK",
   "homepage": "hhttps://github.com/prelude-so/apple-sdk",
   "platforms": {
@@ -19,7 +19,7 @@
       "name": "Prelude",
       "source_files": "Sources/**/*.{swift}",
       "frameworks": [
-        "Foundation"
+        "Foundation", "Network", "CryptoKit", "UIKit", "CoreTelephony"
       ]
     },
     {
