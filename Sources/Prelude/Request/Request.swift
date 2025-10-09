@@ -11,9 +11,17 @@ struct Request {
 
     private var body: Data?
 
+    private var followRedirects: Bool = false
+
+    private var maxRedirects: Int = 20
+
     private var interfaceType: NWInterface.InterfaceType = .other
 
     private var timeout: TimeInterval = 2.0
+
+    private var maxRetries: Int = 0
+
+    private var retryAttempt: Int = 0
 
     /// Create a new network HTTP request.
     /// - Parameters:
@@ -31,6 +39,12 @@ extension Request {
     /// - Parameter data: the body data.
     mutating func body(_ data: Data) {
         body = data
+    }
+
+    /// Set the follow redirects flag.
+    /// - Parameter state: the state of the flag.
+    mutating func followRedirects(_ state: Bool) {
+        followRedirects = state
     }
 
     /// Set a header key and value pair.
@@ -53,8 +67,25 @@ extension Request {
         self.timeout = timeout
     }
 
+    /// Set the maximum number of automatic retries in case of a timeout or server error.
+    /// - Parameter maxRetries: the maximum number of retries.
+    mutating func maxRetries(_ maxRetries: Int) {
+        self.maxRetries = maxRetries
+    }
+
+    private func clone(url: URL, maxRedirects: Int? = nil, retryAttempt: Int? = nil) -> Request {
+        var request = Request(url, method: method)
+        request.headers = headers
+        request.followRedirects = followRedirects
+        request.maxRedirects = maxRedirects ?? self.maxRedirects
+        request.interfaceType = interfaceType
+        request.timeout = timeout
+        request.maxRetries = maxRetries
+        request.retryAttempt = retryAttempt ?? self.retryAttempt
+        return request
+    }
+
     /// Send the HTTP request.
-    /// - Parameter completion: the send completion handler.
     func send() async throws -> Data? {
         guard let host = url.host else {
             throw SDKError.internalError("missing URL host")
@@ -62,7 +93,9 @@ extension Request {
 
         let parameters = NWParameters(tls: .init())
         parameters.preferNoProxies = true
-        parameters.requiredInterfaceType = interfaceType
+        if interfaceType != .other {
+            parameters.requiredInterfaceType = interfaceType
+        }
 
         let request = CFHTTPMessageCreateRequest(
             nil,
@@ -113,18 +146,21 @@ extension Request {
 
         connection.start(queue: .connection)
 
-        return try await receiveConnectionMessage(connection: connection)
-    }
-
-    private func receiveConnectionMessage(connection: NWConnection) async throws -> Data? {
-        try await withCheckedThrowingContinuation { continuation in
+        return try await withCheckedThrowingContinuation { continuation in
             connection.receiveMessage { content, _, isComplete, error in
+                timer.cancel()
+
                 if let error {
-                    continuation.resume(throwing: SDKError.requestError(error.localizedDescription))
+                    if isTimeoutError(error) {
+                        self.handleRetry(continuation: continuation)
+                    } else {
+                        continuation.resume(throwing: SDKError.requestError(error.localizedDescription))
+                    }
                     return
                 }
 
                 guard isComplete else {
+                    continuation.resume(throwing: SDKError.requestError("Invalid HTTP response."))
                     return
                 }
 
@@ -137,13 +173,30 @@ extension Request {
                                                  buf.count)
                     }
 
-                    switch parseHTTPResponse(response: response) {
-                    case let .httpError(status):
+                    switch parseHTTPMessage(response) {
+                    case let .retryable(status):
+                        self.handleRetry(continuation: continuation)
+
+                    case let .failure(status):
                         continuation.resume(throwing: SDKError.requestError("HTTP server error: \(status)"))
-                    case let .success(body):
-                        continuation.resume(returning: body)
-                    case .parseError:
-                        continuation.resume(returning: nil)
+
+                    case let .redirect(method, url):
+                        if !self.followRedirects || self.maxRedirects == 0 {
+                            continuation.resume(returning: nil)
+                        } else {
+                            Task {
+                                var request = self.clone(url: url, maxRedirects: self.maxRedirects - 1)
+
+                                do {
+                                    try await continuation.resume(returning: request.send())
+                                } catch {
+                                    continuation.resume(throwing: error)
+                                }
+                            }
+                        }
+
+                    case let .success(data):
+                        continuation.resume(returning: data)
                     }
                 } else {
                     continuation.resume(returning: nil)
@@ -152,18 +205,28 @@ extension Request {
         }
     }
 
-    private func parseHTTPResponse(response: CFHTTPMessage) -> ParseHttpResult {
-        let status = CFHTTPMessageGetResponseStatusCode(response)
+    private func isTimeoutError(_ error: NWError) -> Bool {
+        error.localizedDescription.contains("Operation canceled")
+    }
 
-        if !(200 ... 299).contains(status) {
-            return .httpError(status)
+    private func handleRetry(continuation: CheckedContinuation<Data?, Error>) {
+        if maxRetries > 0, retryAttempt <= maxRetries {
+            Task {
+                let requestDelay = pow(2.0, Double(self.retryAttempt)) * 0.25
+                let totalDelay = min(requestDelay, 10.0) // Cap at 10 seconds
+
+                do {
+                    try await Task.sleep(nanoseconds: UInt64(totalDelay * 1_000_000_000))
+
+                    let result = try await self.clone(url: self.url, retryAttempt: self.retryAttempt + 1).send()
+                    continuation.resume(returning: result)
+                } catch {
+                    continuation.resume(throwing: error)
+                }
+            }
+        } else {
+            continuation.resume(throwing: SDKError.requestError("Max retries reached"))
         }
-
-        if let body = CFHTTPMessageCopyBody(response)?.takeRetainedValue() {
-            return .success(body as Data)
-        }
-
-        return .parseError
     }
 
     private func deadline(for connection: NWConnection, timeout: TimeInterval) -> any DispatchSourceTimer {
@@ -175,10 +238,33 @@ extension Request {
         return timer
     }
 
-    enum ParseHttpResult {
-        case httpError(Int)
-        case success(Data)
-        case parseError
+    enum ParseHTTPMessageResult {
+        case failure(Int)
+        case redirect(String, URL)
+        case retryable(Int)
+        case success(Data?)
+    }
+
+    private func parseHTTPMessage(_ message: CFHTTPMessage) -> ParseHTTPMessageResult {
+        let status = CFHTTPMessageGetResponseStatusCode(message)
+
+        switch status {
+        case 200 ..< 300:
+            return .success(CFHTTPMessageCopyBody(message)?.takeRetainedValue() as? Data)
+
+        case 300 ... 303, 307, 308:
+            guard let location = CFHTTPMessageCopyHeaderFieldValue(message, "Location" as CFString)?
+                .takeRetainedValue() as? String, let url = URL(string: location) else {
+                return .failure(status)
+            }
+            return .redirect((307 ... 308).contains(status) ? method : "GET", url)
+
+        case 500 ..< 600:
+            return .retryable(status)
+
+        default:
+            return .failure(status)
+        }
     }
 }
 

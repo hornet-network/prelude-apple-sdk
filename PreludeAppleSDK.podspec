@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name           = 'PreludeAppleSDK'
-  s.version        = '0.1.3'
+  s.version        = '0.2.4'
   s.summary        = 'Cocoapod fork of Prelude\'s Apple SDK'
   s.license        = 'Copyright Prelude. All rights reserved.'
   s.author         = 'Prelude'

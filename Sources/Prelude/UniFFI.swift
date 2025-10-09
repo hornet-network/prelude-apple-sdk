@@ -785,6 +785,156 @@ internal func FfiConverterTypeApplicationApplePlatform_lower(_ value: Applicatio
 }
 
 
+internal struct ApplicationWebPlatform {
+    internal var userAgent: String?
+    internal var connectionType: String?
+    internal var rtt: Int32?
+    internal var cookiesEnabled: Bool?
+    internal var indexedDbEnabled: Bool?
+    internal var localStorageEnabled: Bool?
+    internal var doNotTrack: String?
+    internal var multiTouchDevice: Bool?
+    internal var mediaCapabilities: String?
+    internal var maybeHeadless: Bool?
+    internal var pluginsDigest: String?
+    internal var webGlEnabled: Bool?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    internal init(userAgent: String?, connectionType: String?, rtt: Int32?, cookiesEnabled: Bool?, indexedDbEnabled: Bool?, localStorageEnabled: Bool?, doNotTrack: String?, multiTouchDevice: Bool?, mediaCapabilities: String?, maybeHeadless: Bool?, pluginsDigest: String?, webGlEnabled: Bool?) {
+        self.userAgent = userAgent
+        self.connectionType = connectionType
+        self.rtt = rtt
+        self.cookiesEnabled = cookiesEnabled
+        self.indexedDbEnabled = indexedDbEnabled
+        self.localStorageEnabled = localStorageEnabled
+        self.doNotTrack = doNotTrack
+        self.multiTouchDevice = multiTouchDevice
+        self.mediaCapabilities = mediaCapabilities
+        self.maybeHeadless = maybeHeadless
+        self.pluginsDigest = pluginsDigest
+        self.webGlEnabled = webGlEnabled
+    }
+}
+
+#if compiler(>=6)
+extension ApplicationWebPlatform: Sendable {}
+#endif
+
+
+extension ApplicationWebPlatform: Equatable, Hashable {
+    internal static func ==(lhs: ApplicationWebPlatform, rhs: ApplicationWebPlatform) -> Bool {
+        if lhs.userAgent != rhs.userAgent {
+            return false
+        }
+        if lhs.connectionType != rhs.connectionType {
+            return false
+        }
+        if lhs.rtt != rhs.rtt {
+            return false
+        }
+        if lhs.cookiesEnabled != rhs.cookiesEnabled {
+            return false
+        }
+        if lhs.indexedDbEnabled != rhs.indexedDbEnabled {
+            return false
+        }
+        if lhs.localStorageEnabled != rhs.localStorageEnabled {
+            return false
+        }
+        if lhs.doNotTrack != rhs.doNotTrack {
+            return false
+        }
+        if lhs.multiTouchDevice != rhs.multiTouchDevice {
+            return false
+        }
+        if lhs.mediaCapabilities != rhs.mediaCapabilities {
+            return false
+        }
+        if lhs.maybeHeadless != rhs.maybeHeadless {
+            return false
+        }
+        if lhs.pluginsDigest != rhs.pluginsDigest {
+            return false
+        }
+        if lhs.webGlEnabled != rhs.webGlEnabled {
+            return false
+        }
+        return true
+    }
+
+    internal func hash(into hasher: inout Hasher) {
+        hasher.combine(userAgent)
+        hasher.combine(connectionType)
+        hasher.combine(rtt)
+        hasher.combine(cookiesEnabled)
+        hasher.combine(indexedDbEnabled)
+        hasher.combine(localStorageEnabled)
+        hasher.combine(doNotTrack)
+        hasher.combine(multiTouchDevice)
+        hasher.combine(mediaCapabilities)
+        hasher.combine(maybeHeadless)
+        hasher.combine(pluginsDigest)
+        hasher.combine(webGlEnabled)
+    }
+}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+internal struct FfiConverterTypeApplicationWebPlatform: FfiConverterRustBuffer {
+    internal static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ApplicationWebPlatform {
+        return
+            try ApplicationWebPlatform(
+                userAgent: FfiConverterOptionString.read(from: &buf), 
+                connectionType: FfiConverterOptionString.read(from: &buf), 
+                rtt: FfiConverterOptionInt32.read(from: &buf), 
+                cookiesEnabled: FfiConverterOptionBool.read(from: &buf), 
+                indexedDbEnabled: FfiConverterOptionBool.read(from: &buf), 
+                localStorageEnabled: FfiConverterOptionBool.read(from: &buf), 
+                doNotTrack: FfiConverterOptionString.read(from: &buf), 
+                multiTouchDevice: FfiConverterOptionBool.read(from: &buf), 
+                mediaCapabilities: FfiConverterOptionString.read(from: &buf), 
+                maybeHeadless: FfiConverterOptionBool.read(from: &buf), 
+                pluginsDigest: FfiConverterOptionString.read(from: &buf), 
+                webGlEnabled: FfiConverterOptionBool.read(from: &buf)
+        )
+    }
+
+    internal static func write(_ value: ApplicationWebPlatform, into buf: inout [UInt8]) {
+        FfiConverterOptionString.write(value.userAgent, into: &buf)
+        FfiConverterOptionString.write(value.connectionType, into: &buf)
+        FfiConverterOptionInt32.write(value.rtt, into: &buf)
+        FfiConverterOptionBool.write(value.cookiesEnabled, into: &buf)
+        FfiConverterOptionBool.write(value.indexedDbEnabled, into: &buf)
+        FfiConverterOptionBool.write(value.localStorageEnabled, into: &buf)
+        FfiConverterOptionString.write(value.doNotTrack, into: &buf)
+        FfiConverterOptionBool.write(value.multiTouchDevice, into: &buf)
+        FfiConverterOptionString.write(value.mediaCapabilities, into: &buf)
+        FfiConverterOptionBool.write(value.maybeHeadless, into: &buf)
+        FfiConverterOptionString.write(value.pluginsDigest, into: &buf)
+        FfiConverterOptionBool.write(value.webGlEnabled, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+internal func FfiConverterTypeApplicationWebPlatform_lift(_ buf: RustBuffer) throws -> ApplicationWebPlatform {
+    return try FfiConverterTypeApplicationWebPlatform.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+internal func FfiConverterTypeApplicationWebPlatform_lower(_ value: ApplicationWebPlatform) -> RustBuffer {
+    return FfiConverterTypeApplicationWebPlatform.lower(value)
+}
+
+
 internal struct Device {
     internal var platform: Platform?
     internal var bootTime: Date?
@@ -1190,12 +1340,14 @@ internal func FfiConverterTypeHardware_lower(_ value: Hardware) -> RustBuffer {
 internal struct Network {
     internal var cellularData: Bool?
     internal var cellularTechnologies: [String]?
+    internal var vpnEnabled: Bool?
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
-    internal init(cellularData: Bool?, cellularTechnologies: [String]?) {
+    internal init(cellularData: Bool?, cellularTechnologies: [String]?, vpnEnabled: Bool?) {
         self.cellularData = cellularData
         self.cellularTechnologies = cellularTechnologies
+        self.vpnEnabled = vpnEnabled
     }
 }
 
@@ -1212,12 +1364,16 @@ extension Network: Equatable, Hashable {
         if lhs.cellularTechnologies != rhs.cellularTechnologies {
             return false
         }
+        if lhs.vpnEnabled != rhs.vpnEnabled {
+            return false
+        }
         return true
     }
 
     internal func hash(into hasher: inout Hasher) {
         hasher.combine(cellularData)
         hasher.combine(cellularTechnologies)
+        hasher.combine(vpnEnabled)
     }
 }
 
@@ -1231,13 +1387,15 @@ internal struct FfiConverterTypeNetwork: FfiConverterRustBuffer {
         return
             try Network(
                 cellularData: FfiConverterOptionBool.read(from: &buf), 
-                cellularTechnologies: FfiConverterOptionSequenceString.read(from: &buf)
+                cellularTechnologies: FfiConverterOptionSequenceString.read(from: &buf), 
+                vpnEnabled: FfiConverterOptionBool.read(from: &buf)
         )
     }
 
     internal static func write(_ value: Network, into buf: inout [UInt8]) {
         FfiConverterOptionBool.write(value.cellularData, into: &buf)
         FfiConverterOptionSequenceString.write(value.cellularTechnologies, into: &buf)
+        FfiConverterOptionBool.write(value.vpnEnabled, into: &buf)
     }
 }
 
@@ -1367,6 +1525,8 @@ internal enum ApplicationPlatform {
     )
     case apple(ApplicationApplePlatform
     )
+    case web(ApplicationWebPlatform
+    )
 }
 
 
@@ -1390,6 +1550,9 @@ internal struct FfiConverterTypeApplicationPlatform: FfiConverterRustBuffer {
         case 2: return .apple(try FfiConverterTypeApplicationApplePlatform.read(from: &buf)
         )
         
+        case 3: return .web(try FfiConverterTypeApplicationWebPlatform.read(from: &buf)
+        )
+        
         default: throw UniffiInternalError.unexpectedEnumCase
         }
     }
@@ -1406,6 +1569,11 @@ internal struct FfiConverterTypeApplicationPlatform: FfiConverterRustBuffer {
         case let .apple(v1):
             writeInt(&buf, Int32(2))
             FfiConverterTypeApplicationApplePlatform.write(v1, into: &buf)
+            
+        
+        case let .web(v1):
+            writeInt(&buf, Int32(3))
+            FfiConverterTypeApplicationWebPlatform.write(v1, into: &buf)
             
         }
     }
@@ -1428,6 +1596,9 @@ internal func FfiConverterTypeApplicationPlatform_lower(_ value: ApplicationPlat
 
 
 extension ApplicationPlatform: Equatable, Hashable {}
+
+
+
 
 
 
@@ -1519,6 +1690,9 @@ extension BatteryState: Equatable, Hashable {}
 
 
 
+
+
+
 // Note that we don't yet support `indirect` for enums.
 // See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
 
@@ -1527,6 +1701,7 @@ internal enum Platform {
     case unspecified
     case apple
     case android
+    case web
 }
 
 
@@ -1550,6 +1725,8 @@ internal struct FfiConverterTypePlatform: FfiConverterRustBuffer {
         
         case 3: return .android
         
+        case 4: return .web
+        
         default: throw UniffiInternalError.unexpectedEnumCase
         }
     }
@@ -1568,6 +1745,10 @@ internal struct FfiConverterTypePlatform: FfiConverterRustBuffer {
         
         case .android:
             writeInt(&buf, Int32(3))
+        
+        
+        case .web:
+            writeInt(&buf, Int32(4))
         
         }
     }
@@ -1590,6 +1771,9 @@ internal func FfiConverterTypePlatform_lower(_ value: Platform) -> RustBuffer {
 
 
 extension Platform: Equatable, Hashable {}
+
+
+
 
 
 
